@@ -1,0 +1,330 @@
+<!DOCTYPE html>      
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Hastane Randevu Sistemi</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* CSS kodların aynen korunarak */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: url('https://media1.tenor.com/m/JwHkXhp9oFUAAAAC/hekimo%C4%9Flu-hekimoglu.gif') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #00d9ff;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #f2f2f2;
+      font-size: 14px;
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      background: #00d9ff;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin: 5px;
+    }
+    button:hover {
+      background: #00aacc;
+    }
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+    .doktor-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .doktor {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+      width: 200px;
+    }
+    .doktor:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+    .doktor img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      object-fit: cover;
+      border: 2px solid #fff;
+    }
+    .saat-kutu {
+      display: inline-block;
+      margin: 5px;
+      padding: 8px 12px;
+      background: #00d9ff;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .saat-kutu:hover {
+      background: #00aacc;
+    }
+    .saat-kutu.alinan {
+      background: red !important;
+      cursor: not-allowed;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    th {
+      background: rgba(0, 217, 255, 0.5);
+    }
+    #logoutBtn {
+      float: right;
+      background: red;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="girisEkrani" class="container">
+  <h1>Hastane Randevu Sistemi</h1>
+  <h2>Giriş Yap</h2>
+  <div id="girisHata" class="error"></div>
+  <label for="tcGiris">TC Kimlik No:</label>
+  <input type="text" id="tcGiris" maxlength="11">
+  <label for="kullaniciGiris">Kullanıcı Adı:</label>
+  <input type="text" id="kullaniciGiris">
+  <label for="sifreGiris">Şifre:</label>
+  <input type="password" id="sifreGiris">
+  <button onclick="girisYap()">Giriş Yap</button>
+  <button onclick="kayitEkraniAc()">Kayıt Ol</button>
+</div>
+
+<div id="kayitEkrani" class="container" style="display:none;">
+  <h1>Hastane Randevu Sistemi</h1>
+  <h2>Kayıt Ol</h2>
+  <div id="kayitHata" class="error"></div>
+  <label for="tcKayit">TC Kimlik No:</label>
+  <input type="text" id="tcKayit" maxlength="11">
+  <label for="kullaniciKayit">Kullanıcı Adı:</label>
+  <input type="text" id="kullaniciKayit">
+  <label for="sifreKayit">Şifre:</label>
+  <input type="password" id="sifreKayit">
+  <button onclick="kayitOl()">Kayıt Ol</button>
+  <button onclick="girisEkraniAc()">Geri Dön</button>
+</div>
+
+<div id="panelEkrani" class="container" style="display:none;">
+  <button id="logoutBtn" onclick="logout()">Çıkış Yap</button>
+  <h1>Hoşgeldin, <span id="kullaniciAd"></span></h1>
+  <h2>Randevu Al</h2>
+  <label for="tarihSec">Tarih:</label>
+  <input type="date" id="tarihSec" onchange="doktorlariGoster()">
+
+  <div id="doktorlar" class="doktor-box"></div>
+
+  <h2>Randevularım</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Doktor</th>
+        <th>Tarih</th>
+        <th>Saat</th>
+        <th>İptal</th>
+      </tr>
+    </thead>
+    <tbody id="randevuTablo"></tbody>
+  </table>
+</div>
+
+<script>
+const doktorlar = [
+  { id: 1, ad: "Dr. Ahmet Yılmaz", brans: "Kardiyoloji", resim: "https://png.pngtree.com/png-vector/20240205/ourlarge/pngtree-professional-doctor-with-order-png-image_11626748.png", saatler: ["09:00", "10:00", "11:00", "13:00", "14:00"] },
+  { id: 2, ad: "Dr. Ayşe Demir", brans: "Dahiliye", resim: "https://st.depositphotos.com/2691351/3486/i/450/depositphotos_34861261-stock-photo-a-female-doctor-with-a.jpg", saatler: ["09:30", "10:30", "12:00", "13:30", "15:00"] },
+  { id: 3, ad: "Dr. Canan Kaya", brans: "Göz Hastalıkları", resim: "https://png.pngtree.com/png-vector/20240220/ourlarge/pngtree-beautiful-female-doctor-photo-png-image_11755263.png", saatler: ["08:00", "10:00", "11:30", "12:30", "14:00"] },
+  { id: 4, ad: "Dr. Elif Gürkan", brans: "Ortopedi", resim: "https://static.ticimax.cloud/cdn-cgi/image/width=-,quality=85/37474/uploads/urunresimleri/buyuk/mert-giyimacik-mavi-doktor-hemsire-ust--43ea-.jpg", saatler: ["08:30", "09:30", "10:30", "12:30", "14:30"] }
+];
+
+let aktifKullanici = null;
+
+function kayitEkraniAc() {
+  document.getElementById('girisEkrani').style.display = 'none';
+  document.getElementById('kayitEkrani').style.display = 'block';
+}
+function girisEkraniAc() {
+  document.getElementById('kayitEkrani').style.display = 'none';
+  document.getElementById('girisEkrani').style.display = 'block';
+}
+
+function kayitOl() {
+  const tc = document.getElementById('tcKayit').value;
+  const kullaniciAd = document.getElementById('kullaniciKayit').value;
+  const sifre = document.getElementById('sifreKayit').value;
+  
+  // Kullanıcıyı kaydetme
+  const kullanicilar = JSON.parse(localStorage.getItem('kullanicilar') || '{}');
+  if (kullanicilar[tc]) {
+    document.getElementById('kayitHata').innerText = "Bu TC ile bir kullanıcı zaten mevcut.";
+    return;
+  }
+  
+  kullanicilar[tc] = {
+    kullaniciAd,
+    sifre,
+    randevular: []
+  };
+
+  localStorage.setItem('kullanicilar', JSON.stringify(kullanicilar));
+  
+  alert("Kayıt başarılı! Giriş yapabilirsiniz.");
+  girisEkraniAc();
+}
+
+function girisYap() {
+  const tc = document.getElementById('tcGiris').value;
+  const kullaniciAd = document.getElementById('kullaniciGiris').value;
+  const sifre = document.getElementById('sifreGiris').value;
+  
+  const kullanicilar = JSON.parse(localStorage.getItem('kullanicilar') || '{}');
+  const kullanici = kullanicilar[tc];
+  
+  if (kullanici && kullanici.kullaniciAd === kullaniciAd && kullanici.sifre === sifre) {
+    aktifKullanici = tc;
+    document.getElementById('kullaniciAd').textContent = kullaniciAd;
+    document.getElementById('girisEkrani').style.display = 'none';
+    document.getElementById('panelEkrani').style.display = 'block';
+    randevulariListele();
+  } else {
+    document.getElementById('girisHata').innerText = "Geçersiz giriş. Lütfen tekrar deneyin.";
+  }
+}
+
+function logout() {
+  aktifKullanici = null;
+  document.getElementById('panelEkrani').style.display = 'none';
+  document.getElementById('girisEkrani').style.display = 'block';
+}
+
+function doktorlariGoster() {
+  const container = document.getElementById('doktorlar');
+  container.innerHTML = '';
+  const tarih = document.getElementById('tarihSec').value;
+  const kullanicilar = JSON.parse(localStorage.getItem('kullanicilar') || '{}');
+
+  let tumRandevular = [];
+  Object.values(kullanicilar).forEach(kullanici => {
+    tumRandevular = tumRandevular.concat(kullanici.randevular);
+  });
+
+  doktorlar.forEach(doktor => {
+    const div = document.createElement('div');
+    div.className = 'doktor';
+    div.innerHTML = `
+      <img src="${doktor.resim}" alt="${doktor.ad}">
+      <h3>${doktor.ad}</h3>
+      <p>${doktor.brans}</p>
+    `;
+
+    doktor.saatler.forEach(saat => {
+      const alindiMi = tumRandevular.some(r => r.doktor === doktor.ad && r.tarih === tarih && r.saat === saat);
+      const saatSpan = document.createElement('span');
+      saatSpan.className = 'saat-kutu' + (alindiMi ? ' alinan' : '');
+      saatSpan.textContent = saat;
+      if (!alindiMi) {
+        saatSpan.onclick = () => randevuAl(doktor.ad, tarih, saat);
+      }
+      div.appendChild(saatSpan);
+    });
+
+    container.appendChild(div);
+  });
+}
+
+function randevuAl(doktorAd, tarih, saat) {
+  const kullanicilar = JSON.parse(localStorage.getItem('kullanicilar') || '{}');
+  const randevular = kullanicilar[aktifKullanici].randevular;
+  
+  randevular.push({ doktor: doktorAd, tarih: tarih, saat: saat });
+  
+  kullanicilar[aktifKullanici].randevular = randevular;
+  localStorage.setItem('kullanicilar', JSON.stringify(kullanicilar));
+  
+  doktorlariGoster();
+  randevulariListele();
+}
+
+function randevulariListele() {
+  const randevuTablo = document.getElementById('randevuTablo');
+  randevuTablo.innerHTML = ''; // Tabloyu temizle
+  const kullanicilar = JSON.parse(localStorage.getItem('kullanicilar') || '{}');
+  
+  const randevular = kullanicilar[aktifKullanici]?.randevular || [];
+  randevular.forEach(randevu => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${randevu.doktor}</td>
+      <td>${randevu.tarih}</td>
+      <td>${randevu.saat}</td>
+      <td><button onclick="randevuIptal('${randevu.doktor}', '${randevu.tarih}', '${randevu.saat}')">İptal</button></td>
+    `;
+    randevuTablo.appendChild(row);
+  });
+}
+
+function randevuIptal(doktorAd, tarih, saat) {
+  const kullanicilar = JSON.parse(localStorage.getItem('kullanicilar') || '{}');
+  const randevular = kullanicilar[aktifKullanici].randevular;
+  
+  // İptal edilen randevuyu listeden çıkarıyoruz
+  kullanicilar[aktifKullanici].randevular = randevular.filter(r => !(r.doktor === doktorAd && r.tarih === tarih && r.saat === saat));
+  
+  // Güncellenmiş kullanıcı bilgilerini localStorage'a kaydediyoruz
+  localStorage.setItem('kullanicilar', JSON.stringify(kullanicilar));
+  
+  // Doktorları ve randevuları yeniden gösteriyoruz
+  doktorlariGoster();
+  randevulariListele();
+}
+</script>
+
+</body>
+</html>
